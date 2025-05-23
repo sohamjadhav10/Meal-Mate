@@ -19,46 +19,39 @@ const BookingPage = () => {
   const { getMealCategories, createBooking, getAvailableDates } = useBooking();
   const navigate = useNavigate();
   
+  const [cart, setCart] = useState([]);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('wallet');
   const [isProcessing, setIsProcessing] = useState(false);
   const [meal, setMeal] = useState(null);
   const [bookingDate, setBookingDate] = useState(null);
+  const [bookedMeals, setBookedMeals] = useState([]);
   
-  const mealCategories = getMealCategories();
-  const availableDates = getAvailableDates();
-  
-  useEffect(() => {
-    if (!dateParam || !mealIdParam) {
-      toast.error('Missing booking information');
-      navigate('/dashboard');
-      return;
-    }
+  // Add this function to handle adding items to cart
+  const handleAddToCart = () => {
+    if (!meal || !bookingDate) return;
     
-    const foundMeal = mealCategories.find(m => m.id === mealIdParam);
-    if (!foundMeal) {
-      toast.error('Invalid meal selected');
-      navigate('/dashboard');
-      return;
-    }
+    const newCartItem = {
+      mealId: meal.id,
+      mealName: meal.name,
+      date: bookingDate.display,
+      price: meal.price
+    };
     
-    const foundDate = availableDates.find(d => d.formatted === dateParam);
-    if (!foundDate) {
-      toast.error('Invalid date selected');
-      navigate('/dashboard');
-      return;
+    if (!cart.some(item => item.mealId === meal.id)) {
+      setCart([...cart, newCartItem]);
+      toast.success('Meal added to cart');
+    } else {
+      toast.info('Meal already in cart');
     }
-    
-    setMeal(foundMeal);
-    setBookingDate(foundDate);
-  }, [dateParam, mealIdParam]);
-  
+  };
+
+  // Modify the handleConfirmBooking function
   const handleConfirmBooking = async () => {
     if (!meal || !bookingDate) return;
     
     setIsProcessing(true);
     
     try {
-      // Check if wallet balance is sufficient when paying with wallet
       if (selectedPaymentMethod === 'wallet' && user.walletBalance < meal.price) {
         toast.error('Insufficient wallet balance');
         setIsProcessing(false);
@@ -93,6 +86,8 @@ const BookingPage = () => {
       const data = await result.json();
       
       if (data.success) {
+        setBookedMeals([...bookedMeals, meal.id]);
+        setCart(cart.filter(item => item.mealId !== meal.id));
         navigate('/confirmation');
       } else {
         throw new Error(data.message || 'Booking failed');
@@ -104,17 +99,8 @@ const BookingPage = () => {
       setIsProcessing(false);
     }
   };
-  
-  if (!meal || !bookingDate) {
-    return (
-      <PageContainer>
-        <div className="container mx-auto px-4 py-8 text-center">
-          Loading booking information...
-        </div>
-      </PageContainer>
-    );
-  }
-  
+
+  // Modify the button rendering in the return statement
   return (
     <PageContainer>
       <div className="container mx-auto px-4 py-8 max-w-2xl">
@@ -214,9 +200,19 @@ const BookingPage = () => {
             Back
           </Button>
           <Button 
+            variant={bookedMeals.includes(meal?.id) ? "success" : "default"}
+            className={bookedMeals.includes(meal?.id) ? "bg-green-600 hover:bg-green-700" : "bg-corporate-600 hover:bg-corporate-700"}
+            onClick={handleAddToCart}
+            disabled={isProcessing || bookedMeals.includes(meal?.id) || (selectedPaymentMethod === 'wallet' && user.walletBalance < meal.price)}
+          >
+            {isProcessing ? 'Processing...' : 
+             bookedMeals.includes(meal?.id) ? 'Already Booked' :
+             cart.some(item => item.mealId === meal?.id) ? 'Added to Cart' : 'Add to Cart'}
+          </Button>
+          <Button 
             className="bg-corporate-600 hover:bg-corporate-700"
             onClick={handleConfirmBooking}
-            disabled={isProcessing || (selectedPaymentMethod === 'wallet' && user.walletBalance < meal.price)}
+            disabled={isProcessing || bookedMeals.includes(meal?.id) || (selectedPaymentMethod === 'wallet' && user.walletBalance < meal.price)}
           >
             {isProcessing ? 'Processing...' : 'Confirm Booking'}
           </Button>
