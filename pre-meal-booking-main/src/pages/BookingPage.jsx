@@ -81,7 +81,7 @@ const BookingPage = () => {
         paymentStatus: 'completed'
       };
       
-      const result = await fetch('http://localhost:5000/api/bookings', {
+      const result = await fetch('https://meal-mate-hegm.onrender.com/api/bookings', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

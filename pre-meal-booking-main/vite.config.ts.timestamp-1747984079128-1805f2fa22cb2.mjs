@@ -10,7 +10,7 @@ var vite_config_default = defineConfig(({ mode }) => ({
     port: 8081,
     proxy: {
       "/api": {
-        target: "http://localhost:5000",
+        target: "https://meal-mate-hegm.onrender.com",
         changeOrigin: true,
         secure: false
       }

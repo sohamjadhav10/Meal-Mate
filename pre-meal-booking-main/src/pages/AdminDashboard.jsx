@@ -61,7 +61,7 @@ const AdminDashboard = () => {
 useEffect(() => {
     const fetchBookings = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/bookings/all', {
+            const response = await fetch('https://meal-mate-hegm.onrender.com/api/bookings/all', {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${user.token}`,
